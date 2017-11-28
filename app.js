@@ -90,7 +90,23 @@ function initDBConnection() {
 
 initDBConnection();
 
+//implementing routes by Danny
+//routes.index is homepage, first page on https://group5untangling.mybluemix.net/
+
 app.get('/', routes.index);
+
+//routes.index is database, second page on https://group5untangling.mybluemix.net/database
+
+app.get('/database', routes.database);
+
+//routes.index is chatbot, third page on https://group5untangling.mybluemix.net/
+
+app.get('/chatbot', routes.chatbot);
+
+//routes.index is facts, fourth page on https://group5untangling.mybluemix.net/
+app.get('/facts', routes.facts);
+
+//implementing of different routes done :)
 
 function createResponseData(id, name, value, attachments) {
 
