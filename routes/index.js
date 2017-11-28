@@ -9,11 +9,11 @@ exports.index = function(req, res){
 //implemented by Danny 
 //GET database 
 exports.database = function(req, res){
-  res.render('chatbot.html', { title: 'Cloudant Boiler Plate' });
+  res.render('database.html', { title: 'Cloudant Boiler Plate' });
 };
 //GET chatbot
 exports.chatbot = function(req, res){
-  res.render('index.html', { title: 'Cloudant Boiler Plate' });
+  res.render('chatbot.html', { title: 'Cloudant Boiler Plate' });
 };
 //GET FACTS
 exports.facts = function(req, res){
