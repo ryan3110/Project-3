@@ -9,28 +9,16 @@ http = require('http'),
 path = require('path'),
 fs = require('fs');
 
-
-
-
-
-
 var app = express();
 
 var db;
-var db2;
 
-var Cloudant;
 var cloudant;
-var cloudant2;
 
 var fileToUpload;
 
 var dbCredentials = {
 dbName: 'my_sample_db'
-};
-
-var dbCredentials2 = {
-dbName: 'my_simple_db'
 };
 
 var bodyParser = require('body-parser');
@@ -41,7 +29,7 @@ var multipart = require('connect-multiparty')
 var multipartMiddleware = multipart();
 
 // all environments
-app.set('port', process.env.PORT || 3015);
+app.set('port', process.env.PORT || 3000);
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.engine('html', require('ejs').renderFile);
@@ -51,12 +39,9 @@ extended: true
 }));
 app.use(bodyParser.json());
 app.use(methodOverride());
-
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/style', express.static(path.join(__dirname, '/views/style')));
 
-
-
-app.use(express.static(path.join(__dirname, 'public')));
 // development only
 if ('development' == app.get('env')) {
 app.use(errorHandler());
@@ -75,14 +60,10 @@ for (var vcapService in vcapServices) {
 }
 
 function initDBConnection() {
-
-console.log("db:"+db);
-
 //When running on Bluemix, this variable will be set to a json object
 //containing all the service credentials of all the bound services
 if (process.env.VCAP_SERVICES) {
     dbCredentials.url = getDBCredentialsUrl(process.env.VCAP_SERVICES);
-    dbCredentials2.url = getDBCredentialsUrl(process.env.VCAP_SERVICES);
 } else { //When running locally, the VCAP_SERVICES will not be set
 
     // When running this app locally you can get your Cloudant credentials
@@ -93,16 +74,10 @@ if (process.env.VCAP_SERVICES) {
     // Bluemix service.
     // url will be in this format: https://username:password@xxxxxxxxx-bluemix.cloudant.com
     dbCredentials.url = getDBCredentialsUrl(fs.readFileSync("vcap-local.json", "utf-8"));
-    dbCredentials2.url = getDBCredentialsUrl(fs.readFileSync("vcap-local.json", "utf-8"));
 }
 
-console.log("db:"+db);
+cloudant = require('cloudant')(dbCredentials.url);
 
-Cloudant = require('cloudant');
-cloudant = Cloudant(dbCredentials.url);
-cloudant2 = Cloudant(dbCredentials2.url);
-
-console.log("db:"+db);
 // check if DB exists if not create
 cloudant.db.create(dbCredentials.dbName, function(err, res) {
     if (err) {
@@ -111,48 +86,17 @@ cloudant.db.create(dbCredentials.dbName, function(err, res) {
 });
 
 db = cloudant.use(dbCredentials.dbName);
-
-console.log("db:"+db);
-console.log(db2);
-
-cloudant2.db.create(dbCredentials2.dbName, function(err, res) {
-    if (err) {
-        console.log('Could not create new db: ' + dbCredentials.dbName + ', it might already exist.');
-    }
-});
-
-db2 = cloudant2.use(dbCredentials2.dbName);
 }
 
 initDBConnection();
 
-
-app.get('/one', routes.index1);
-
-
-//implementing routes by Danny
-//routes.index is homepage, first page on https://group5untangling.mybluemix.net/
-
-app.get('/', routes.index);
-
-
-//test
-app.get('/one', routes.index1);
-
-//routes.index is database, second page on https://group5untangling.mybluemix.net/database
-
-app.get('/database', routes.database);
-
-//routes.index is chatbot, third page on https://group5untangling.mybluemix.net/
-
-app.get('/chatbot', routes.chatbot);
-
-//routes.index is facts, fourth page on https://group5untangling.mybluemix.net/
-app.get('/facts', routes.facts);
-
-//implementing of different routes done :)
-
-
+ //implementing routes by Danny
+  //routes.index is homepage, first page on https://group5untangling.mybluemix.net/
+  
+  app.get('/', routes.index);
+  app.get('/database', routes.database);
+  app.get('/chatbot', routes.chatbot);
+  app.get('/facts', routes.facts);
 
 function createResponseData(id, name, value, attachments) {
 
@@ -491,48 +435,8 @@ db.list(function(err, body) {
 
 });
 
-//animals routes
-
-
-app.get('/two', routes.index2);
-app.locals.somevar = 'testVar';
-
-app.post('/api/animals', function(request, response) {
-
-    console.log("add a animal..");
-
-    var id;
-    var name = request.body.name;
-    var value = request.body.value;
-
-    console.log(request.body.name);
-    console.log(request.user);
-
-    if (id === undefined) {
-        // Generated random id
-        id = '';
-    }
-
-    db2.insert({
-        name: name,
-        value: value
-    }, id, function(err, doc) {
-        if (err) {
-            console.log(err);
-            response.sendStatus(500);
-        } else
-            response.sendStatus(200);
-        response.end();
-    });
-
-});
-
-
 
 http.createServer(app).listen(app.get('port'), '0.0.0.0', function() {
 console.log('Express server listening on port ' + app.get('port'));
 });
-
-
-
 
