@@ -12,14 +12,24 @@ fs = require('fs');
 var app = express();
 
 var db;
+var db2;
 
+var Cloudant;
 var cloudant;
+var cloudant2;
 
 var fileToUpload;
+//dbName changed by Danny
+//all db work done by Danny and Ryan
 
 var dbCredentials = {
 dbName: 'my_sample_db'
 };
+
+
+var dbCredentials2 = {
+    dbName: 'legacy_ink'
+    };
 
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
@@ -64,6 +74,7 @@ function initDBConnection() {
 //containing all the service credentials of all the bound services
 if (process.env.VCAP_SERVICES) {
     dbCredentials.url = getDBCredentialsUrl(process.env.VCAP_SERVICES);
+    dbCredentials2.url = getDBCredentialsUrl(process.env.VCAP_SERVICES);
 } else { //When running locally, the VCAP_SERVICES will not be set
 
     // When running this app locally you can get your Cloudant credentials
@@ -76,7 +87,10 @@ if (process.env.VCAP_SERVICES) {
     dbCredentials.url = getDBCredentialsUrl(fs.readFileSync("vcap-local.json", "utf-8"));
 }
 
-cloudant = require('cloudant')(dbCredentials.url);
+
+Cloudant = require('cloudant');
+cloudant = Cloudant(dbCredentials.url);
+cloudant2 = Cloudant(dbCredentials2.url);
 
 // check if DB exists if not create
 cloudant.db.create(dbCredentials.dbName, function(err, res) {
@@ -86,7 +100,19 @@ cloudant.db.create(dbCredentials.dbName, function(err, res) {
 });
 
 db = cloudant.use(dbCredentials.dbName);
+
+console.log("db:"+db);
+console.log(db2);
+
+cloudant2.db.create(dbCredentials2.dbName, function(err, res) {
+    if (err) {
+        console.log('Could not create new db: ' + dbCredentials.dbName + ', it might already exist.');
+    }
+});
+
+db2 = cloudant2.use(dbCredentials2.dbName);
 }
+
 
 initDBConnection();
 
@@ -94,8 +120,11 @@ initDBConnection();
   //routes.index is homepage, first page on https://group5untangling.mybluemix.net/
   
   app.get('/', routes.index);
+  //routes.database, 2nd page  https://group5untangling.mybluemix.net/database
   app.get('/database', routes.database);
+  //routes.chatbot, 3rd page  https://group5untangling.mybluemix.net/chatbot
   app.get('/chatbot', routes.chatbot);
+  //routes.facts, 4th page  https://group5untangling.mybluemix.net/facts
   app.get('/facts', routes.facts);
 
 function createResponseData(id, name, value, attachments) {
@@ -432,6 +461,43 @@ db.list(function(err, body) {
         console.log(err);
     }
 });
+
+});
+
+
+//legacyink routes
+
+
+
+app.locals.somevar = 'testVar';
+
+app.post('/api/legacyink', function(request, response) {
+
+    console.log("add a client");
+
+    var id;
+    var name = request.body.name;
+    var value = request.body.value;
+
+    console.log(request.body.name);
+    console.log(request.user);
+
+    if (id === undefined) {
+        // Generated random id
+        id = '';
+    }
+
+    db2.insert({
+        name: name,
+        value: value
+    }, id, function(err, doc) {
+        if (err) {
+            console.log(err);
+            response.sendStatus(500);
+        } else
+            response.sendStatus(200);
+        response.end();
+    });
 
 });
 
