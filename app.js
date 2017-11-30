@@ -469,7 +469,7 @@ db.list(function(err, body) {
 
 
 
-app.locals.somevar = 'testVar';
+
 
 app.post('/api/legacyink', function(request, response) {
 
