@@ -19,17 +19,14 @@ var cloudant;
 var cloudant2;
 
 var fileToUpload;
-//dbName changed by Danny
-//all db work done by Danny and Ryan
 
 var dbCredentials = {
 dbName: 'my_sample_db'
 };
 
-
 var dbCredentials2 = {
-    dbName: 'legacy_ink'
-    };
+dbName: 'my_simple_db'
+};
 
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
@@ -49,9 +46,12 @@ extended: true
 }));
 app.use(bodyParser.json());
 app.use(methodOverride());
-app.use(express.static(path.join(__dirname, 'public')));
+
 app.use('/style', express.static(path.join(__dirname, '/views/style')));
 
+
+
+app.use(express.static(path.join(__dirname, 'public')));
 // development only
 if ('development' == app.get('env')) {
 app.use(errorHandler());
@@ -70,6 +70,9 @@ for (var vcapService in vcapServices) {
 }
 
 function initDBConnection() {
+
+console.log("db:"+db);
+
 //When running on Bluemix, this variable will be set to a json object
 //containing all the service credentials of all the bound services
 if (process.env.VCAP_SERVICES) {
@@ -85,13 +88,16 @@ if (process.env.VCAP_SERVICES) {
     // Bluemix service.
     // url will be in this format: https://username:password@xxxxxxxxx-bluemix.cloudant.com
     dbCredentials.url = getDBCredentialsUrl(fs.readFileSync("vcap-local.json", "utf-8"));
+    dbCredentials2.url = getDBCredentialsUrl(fs.readFileSync("vcap-local.json", "utf-8"));
 }
 
+console.log("db:"+db);
 
 Cloudant = require('cloudant');
 cloudant = Cloudant(dbCredentials.url);
 cloudant2 = Cloudant(dbCredentials2.url);
 
+console.log("db:"+db);
 // check if DB exists if not create
 cloudant.db.create(dbCredentials.dbName, function(err, res) {
     if (err) {
@@ -113,19 +119,15 @@ cloudant2.db.create(dbCredentials2.dbName, function(err, res) {
 db2 = cloudant2.use(dbCredentials2.dbName);
 }
 
-
 initDBConnection();
 
- //implementing routes by Danny
-  //routes.index is homepage, first page on https://group5untangling.mybluemix.net/
-  
-  app.get('/', routes.index);
-  //routes.database, 2nd page  https://group5untangling.mybluemix.net/database
-  app.get('/database', routes.database);
-  //routes.chatbot, 3rd page  https://group5untangling.mybluemix.net/chatbot
-  app.get('/chatbot', routes.chatbot);
-  //routes.facts, 4th page  https://group5untangling.mybluemix.net/facts
-  app.get('/facts', routes.facts);
+app.get('/', routes.index);
+//routes.database, 2nd page  https://group5untangling.mybluemix.net/database
+app.get('/database', routes.database);
+//routes.chatbot, 3rd page  https://group5untangling.mybluemix.net/chatbot
+app.get('/chatbot', routes.chatbot);
+//routes.facts, 4th page  https://group5untangling.mybluemix.net/facts
+app.get('/facts', routes.facts);
 
 function createResponseData(id, name, value, attachments) {
 
@@ -464,16 +466,14 @@ db.list(function(err, body) {
 
 });
 
+//cars routes
 
-//legacyink routes
-
-
-
+app.get('/database', routes.index2);
 app.locals.somevar = 'testVar';
 
-app.post('/api/legacyink', function(request, response) {
+app.post('/api/cars', function(request, response) {
 
-    console.log("add a client");
+    console.log("add a car..");
 
     var id;
     var name = request.body.name;
@@ -501,8 +501,77 @@ app.post('/api/legacyink', function(request, response) {
 
 });
 
+app.get('/api/project', function(request, response) {
+    
+        console.log("get clients");
+
+        var carList = [];
+        var i = 0;
+        db2.list(function(err, body) {
+            if (!err) {
+                var len = body.rows.length;
+                console.log('total # of clients -> ' + len);
+                if (len == 0) {
+                    // push sample data
+                    // save doc
+                    var docName = 'simple_doc';
+                    var docDesc = 'A simple Document';
+                    db2.insert({
+                        name: docName,
+                        value: 'A sample Document'
+                    }, '', function(err, doc) {
+                        if (err) {
+                            console.log(err);
+                        } else {
+    
+                            console.log('Document : ' + JSON.stringify(doc));
+                            var responseData = createResponseData(
+                                doc.id,
+                                docName,
+                                docDesc, []);
+                            carList.push(responseData);
+                            response.write(JSON.stringify(carList));
+                            console.log(JSON.stringify(carList));
+                            console.log('ending response...');
+                            response.end();
+                        }
+                    });
+                } else {
+    
+                    body.rows.forEach(function(document) {
+    
+                        db2.get(document.id, {
+                            revs_info: true
+                        }, function(err, doc) {
+                            if (!err) {
+                                var responseData = createResponseData(
+                                        doc._id,
+                                        doc.name,
+                                        doc.value, []);
+                                carList.push(responseData);
+                                i++;
+                                if (i >= len) {
+                                    response.write(JSON.stringify(carList));
+                                    console.log('ending response...');
+                                    response.end();
+                                }
+                            } else {
+                                console.log(err);
+                            }
+                        });
+    
+                    });
+                }
+    
+            } else {
+                console.log(err);
+            }
+        });
+    
+    });
+    
+
 
 http.createServer(app).listen(app.get('port'), '0.0.0.0', function() {
 console.log('Express server listening on port ' + app.get('port'));
 });
-
