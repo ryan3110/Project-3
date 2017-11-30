@@ -1,7 +1,7 @@
 // index.js
 // changed var rest data
 // coded by Ryan and Danny
-var REST_DATA = 'api/legacyink';
+var REST_DATA = 'api/animals';
 var KEY_ENTER = 13;
 var defaultItems = [
 

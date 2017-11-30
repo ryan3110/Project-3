@@ -470,8 +470,8 @@ db.list(function(err, body) {
 
 
 
-
-app.post('/api/legacyink', function(request, response) {
+//recycled code from homework11
+app.post('/api/animals', function(request, response) {
 
     console.log("add a client");
 
