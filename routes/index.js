@@ -8,11 +8,8 @@ exports.index = function(req, res){
 };
 //implemented by Danny 
 //GET database 
-//added some things for the database itself
 exports.database = function(req, res){
-  var user = req.user;
-  console.log(req);
-  res.render('database.html', {u: user, title: 'Database'});
+  res.render('database.html', { title: 'Cloudant Boiler Plate' });
 };
 //GET chatbot
 exports.chatbot = function(req, res){
