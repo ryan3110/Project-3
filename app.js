@@ -28,7 +28,7 @@ dbName: 'my_sample_db'
 
 
 var dbCredentials2 = {
-    dbName: 'legacy_ink'
+    dbName: 'my_simple_db'
     };
 
 var bodyParser = require('body-parser');
